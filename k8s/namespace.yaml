@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: akg-production
+  labels:
+    app: agentic-knowledge-graph
+    environment: production

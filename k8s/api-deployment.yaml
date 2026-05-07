@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: akg-api
+  namespace: akg-production
+  labels:
+    app: akg-api
+    version: "1.0.0"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: akg-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0          # zero-downtime deploys
+  template:
+    metadata:
+      labels:
+        app: akg-api
+    spec:
+      serviceAccountName: akg-api-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+
+      containers:
+        - name: api
+          image: ghcr.io/GITHUB_OWNER/agentic-knowledge-graph:latest   # replaced by CI
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+
+          # ── Environment from ConfigMap ──────────────────────────────
+          envFrom:
+            - configMapRef:
+                name: akg-config
+
+          # ── Secrets injected as individual env vars ─────────────────
+          env:
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: akg-secrets
+                  key: ANTHROPIC_API_KEY
+            - name: NEO4J_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: akg-secrets
+                  key: NEO4J_PASSWORD
+
+          # ── Persistent volume for ChromaDB ──────────────────────────
+          volumeMounts:
+            - name: chroma-data
+              mountPath: /app/data/chroma
+
+          # ── Health probes ───────────────────────────────────────────
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 2
+
+          # ── Resource limits (tune based on load testing) ────────────
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "3Gi"
+
+      volumes:
+        - name: chroma-data
+          persistentVolumeClaim:
+            claimName: chroma-pvc
+
+      # Pull from GHCR (if private)
+      imagePullSecrets:
+        - name: ghcr-credentials
