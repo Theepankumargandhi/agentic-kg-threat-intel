@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class NodeType(str, Enum):
+class NodeType(StrEnum):
     TACTIC = "Tactic"
     TECHNIQUE = "Technique"
     SUB_TECHNIQUE = "SubTechnique"
