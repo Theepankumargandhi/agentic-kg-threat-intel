@@ -58,7 +58,7 @@ async def query_endpoint(body: QueryRequest, request: Request) -> QueryResponse:
         )
     except Exception as exc:
         logger.exception("Agent failed for query: %r", body.query)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
     return QueryResponse(
         query=result.get("query", body.query),
@@ -82,7 +82,7 @@ async def graph_explore(
     try:
         raw = graph_store.build_path_trace([node_id])
     except Exception as exc:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
 
     if not raw or not raw.get("nodes"):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Node '{node_id}' not found.")

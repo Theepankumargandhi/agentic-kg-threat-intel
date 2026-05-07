@@ -1,8 +1,8 @@
 """
 Neo4j graph store wrapper with Cypher queries for MITRE ATT&CK traversal.
 """
+
 import logging
-import re
 
 from neo4j import GraphDatabase
 

@@ -1,6 +1,7 @@
 """
 ChromaDB vector store wrapper for MITRE ATT&CK technique embeddings.
 """
+
 import logging
 
 import chromadb

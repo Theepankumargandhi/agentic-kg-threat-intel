@@ -2,9 +2,9 @@
 Downloads MITRE ATT&CK Enterprise STIX bundle and loads it into Neo4j.
 Parses tactics, techniques, sub-techniques, groups, software, and mitigations.
 """
+
 import json
 import logging
-import os
 from pathlib import Path
 
 import requests
@@ -12,10 +12,7 @@ from neo4j import GraphDatabase
 
 logger = logging.getLogger(__name__)
 
-MITRE_URL = (
-    "https://raw.githubusercontent.com/mitre/cti/master/"
-    "enterprise-attack/enterprise-attack.json"
-)
+MITRE_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
 CACHE_PATH = Path("./data/mitre/enterprise-attack.json")
 
 
@@ -41,7 +38,7 @@ class MitreLoader:
     def _download_data(self) -> dict:
         if CACHE_PATH.exists():
             logger.info("Loading MITRE data from cache: %s", CACHE_PATH)
-            with open(CACHE_PATH, "r", encoding="utf-8") as f:
+            with open(CACHE_PATH, encoding="utf-8") as f:
                 return json.load(f)
 
         logger.info("Downloading MITRE ATT&CK data from GitHub...")
@@ -286,8 +283,7 @@ class MitreLoader:
                 continue
 
             session.run(
-                f"MATCH (a:{src_label} {{id: $src}}), (b:{tgt_label} {{id: $tgt}}) "
-                f"MERGE (a)-[:{neo4j_rel}]->(b)",
+                f"MATCH (a:{src_label} {{id: $src}}), (b:{tgt_label} {{id: $tgt}}) MERGE (a)-[:{neo4j_rel}]->(b)",
                 src=src,
                 tgt=tgt,
             )

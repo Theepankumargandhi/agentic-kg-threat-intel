@@ -55,7 +55,7 @@ async def ingest(body: IngestRequest, request: Request) -> IngestResponse:
         duration_s = round(time.perf_counter() - t0, 2)
 
         if stats["error"]:
-            raise HTTPException(
+            raise HTTPException(  # noqa: B904 — no exc in scope here; stats["error"] is a string
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Ingestion failed: {stats['error']}",
             )

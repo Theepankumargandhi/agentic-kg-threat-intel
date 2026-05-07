@@ -1,25 +1,26 @@
 """
 LangGraph StateGraph definition for the Agentic Knowledge Graph Reasoning Engine.
 """
+
 import logging
 import time
 from typing import Any
 
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
 
 import app.agent.nodes as nodes_module
 import app.agent.tools as tools_module
-from app.agent.state import AgentState
 from app.agent.nodes import (
-    query_planner,
-    vector_retriever,
+    answer_generator,
     graph_retriever,
+    hallucination_checker,
     hybrid_fuser,
     path_tracer,
-    answer_generator,
-    hallucination_checker,
+    query_planner,
     should_retry,
+    vector_retriever,
 )
+from app.agent.state import AgentState
 
 logger = logging.getLogger(__name__)
 

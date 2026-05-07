@@ -5,6 +5,7 @@ Each function takes AgentState and returns a partial state update dict.
 Module-level references (hybrid_retriever, graph_store) are set by graph.py
 before the graph is compiled.
 """
+
 import logging
 import re
 from typing import Any
@@ -34,6 +35,7 @@ _TECHNIQUE_RE = re.compile(r"\bT\d{4}(?:\.\d{3})?\b")
 # 1. Query Planner
 # ---------------------------------------------------------------------------
 
+
 def query_planner(state: AgentState) -> dict:
     query = state["query"]
     step = len(state.get("reasoning_steps", [])) + 1
@@ -56,9 +58,10 @@ def query_planner(state: AgentState) -> dict:
     try:
         response = _llm.invoke(messages)
         import json
+
         content = response.content.strip()
         # Extract JSON from response
-        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        json_match = re.search(r"\{.*\}", content, re.DOTALL)
         if json_match:
             parsed = json.loads(json_match.group())
             sub_queries = parsed.get("sub_queries", [query])
@@ -84,6 +87,7 @@ def query_planner(state: AgentState) -> dict:
 # ---------------------------------------------------------------------------
 # 2. Vector Retriever
 # ---------------------------------------------------------------------------
+
 
 def vector_retriever(state: AgentState) -> dict:
     if hybrid_retriever is None:
@@ -125,6 +129,7 @@ def vector_retriever(state: AgentState) -> dict:
 # ---------------------------------------------------------------------------
 # 3. Graph Retriever
 # ---------------------------------------------------------------------------
+
 
 def graph_retriever(state: AgentState) -> dict:
     if graph_store is None:
@@ -175,6 +180,7 @@ def graph_retriever(state: AgentState) -> dict:
 # 4. Hybrid Fuser
 # ---------------------------------------------------------------------------
 
+
 def hybrid_fuser(state: AgentState) -> dict:
     step = len(state.get("reasoning_steps", [])) + 1
     vector_results = state.get("vector_results", [])
@@ -204,11 +210,10 @@ def hybrid_fuser(state: AgentState) -> dict:
     fused = sorted(merged.values(), key=lambda x: x["rrf_score"], reverse=True)
 
     # Build path trace from top graph hits
-    top_node_ids = [
-        r.get("id") for r in fused[:15]
-        if r.get("id") and "graph" in r.get("fusion_sources", [])
-    ]
-    path_trace = graph_store.build_path_trace(top_node_ids) if graph_store and top_node_ids else {"nodes": [], "edges": []}
+    top_node_ids = [r.get("id") for r in fused[:15] if r.get("id") and "graph" in r.get("fusion_sources", [])]
+    path_trace = (
+        graph_store.build_path_trace(top_node_ids) if graph_store and top_node_ids else {"nodes": [], "edges": []}
+    )
 
     return {
         "hybrid_results": fused,
@@ -231,6 +236,7 @@ def hybrid_fuser(state: AgentState) -> dict:
 # 5. Path Tracer
 # ---------------------------------------------------------------------------
 
+
 def path_tracer(state: AgentState) -> dict:
     if graph_store is None:
         return {"path_trace": state.get("path_trace", {"nodes": [], "edges": []}), "reasoning_steps": []}
@@ -251,12 +257,14 @@ def path_tracer(state: AgentState) -> dict:
     for ext_id in tech_ids[:5]:
         related = graph_store.get_related_techniques(ext_id, hops=state.get("max_hops", 2))
         for r in related:
-            extra_nodes.append({
-                "id": r.get("id", ""),
-                "type": r.get("node_type", "Technique"),
-                "name": r.get("name", ""),
-                "properties": {"external_id": r.get("external_id", "")},
-            })
+            extra_nodes.append(
+                {
+                    "id": r.get("id", ""),
+                    "type": r.get("node_type", "Technique"),
+                    "name": r.get("name", ""),
+                    "properties": {"external_id": r.get("external_id", "")},
+                }
+            )
 
     # Merge with existing trace
     all_nodes = {n["id"]: n for n in existing_trace.get("nodes", []) + extra_nodes if n.get("id")}
@@ -285,6 +293,7 @@ def path_tracer(state: AgentState) -> dict:
 # 6. Answer Generator
 # ---------------------------------------------------------------------------
 
+
 def answer_generator(state: AgentState) -> dict:
     step = len(state.get("reasoning_steps", [])) + 1
     query = state["query"]
@@ -303,17 +312,14 @@ def answer_generator(state: AgentState) -> dict:
         mitigations = result.get("mitigations", [])
 
         context_parts.append(
-            f"[{i+1}] {node_type}: {name} ({ext_id})\n"
+            f"[{i + 1}] {node_type}: {name} ({ext_id})\n"
             f"Description: {desc}\n"
             + (f"Mitigations: {', '.join(m['name'] for m in mitigations[:3])}" if mitigations else "")
         )
         sources.append({"name": name, "external_id": ext_id, "type": node_type})
 
     # Graph path summary
-    nodes_summary = ", ".join(
-        f"{n.get('name', '')} ({n.get('type', '')})"
-        for n in path_trace.get("nodes", [])[:8]
-    )
+    nodes_summary = ", ".join(f"{n.get('name', '')} ({n.get('type', '')})" for n in path_trace.get("nodes", [])[:8])
 
     context = "\n\n".join(context_parts)
 
@@ -333,9 +339,7 @@ def answer_generator(state: AgentState) -> dict:
         ),
         HumanMessage(
             content=(
-                f"Query: {query}\n\n"
-                f"Graph Path (reasoning chain): {nodes_summary}\n\n"
-                f"Retrieved Context:\n{context}"
+                f"Query: {query}\n\nGraph Path (reasoning chain): {nodes_summary}\n\nRetrieved Context:\n{context}"
             )
         ),
     ]
@@ -376,6 +380,7 @@ def answer_generator(state: AgentState) -> dict:
 # 7. Hallucination Checker
 # ---------------------------------------------------------------------------
 
+
 def hallucination_checker(state: AgentState) -> dict:
     step = len(state.get("reasoning_steps", [])) + 1
     answer = state.get("answer", "")
@@ -386,10 +391,7 @@ def hallucination_checker(state: AgentState) -> dict:
     source_ids = {s.get("external_id", "") for s in sources}
 
     unsupported = cited_ids - source_ids
-    hallucination_detected = (
-        len(unsupported) > 2
-        and iteration < settings.MAX_ITERATIONS
-    )
+    hallucination_detected = len(unsupported) > 2 and iteration < settings.MAX_ITERATIONS
 
     observation = (
         f"Cited IDs: {cited_ids}, Source IDs: {source_ids}, "
@@ -413,6 +415,7 @@ def hallucination_checker(state: AgentState) -> dict:
 # Conditional edge
 # ---------------------------------------------------------------------------
 
+
 def should_retry(state: AgentState) -> str:
     if state.get("hallucination_detected") and state.get("iteration", 1) < settings.MAX_ITERATIONS:
         logger.info("Hallucination detected — retrying answer generation (iteration %d)", state["iteration"])
@@ -425,8 +428,17 @@ def should_retry(state: AgentState) -> str:
 # ---------------------------------------------------------------------------
 
 _KNOWN_GROUPS = [
-    "apt29", "apt28", "apt41", "lazarus", "fin7", "carbanak",
-    "cozy bear", "fancy bear", "sandworm", "kimsuky", "turla",
+    "apt29",
+    "apt28",
+    "apt41",
+    "lazarus",
+    "fin7",
+    "carbanak",
+    "cozy bear",
+    "fancy bear",
+    "sandworm",
+    "kimsuky",
+    "turla",
 ]
 
 

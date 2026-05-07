@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Any
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class NodeType(str, Enum):
@@ -13,7 +14,7 @@ class NodeType(str, Enum):
 
 
 class QueryRequest(BaseModel):
-    query: str = Field(..., description="Natural language threat intelligence query")
+    query: str = Field(..., min_length=1, max_length=5000, description="Natural language threat intelligence query")
     top_k: int = Field(default=10, ge=1, le=50)
     include_mitigations: bool = Field(default=True)
     max_hops: int = Field(default=3, ge=1, le=5)

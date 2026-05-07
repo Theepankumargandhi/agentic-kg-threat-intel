@@ -1,6 +1,7 @@
 """
 Creates dense embeddings for MITRE ATT&CK techniques and stores them in ChromaDB.
 """
+
 import logging
 
 import chromadb
@@ -114,7 +115,9 @@ class MitreEmbedder:
                 metadatas=metadatas,
             )
             total += len(batch)
-            logger.info("Embedded batch %d/%d (%d techniques)", i // BATCH_SIZE + 1, -(-len(techniques) // BATCH_SIZE), total)
+            logger.info(
+                "Embedded batch %d/%d (%d techniques)", i // BATCH_SIZE + 1, -(-len(techniques) // BATCH_SIZE), total
+            )
 
         return total
 

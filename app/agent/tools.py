@@ -2,6 +2,7 @@
 LangChain tools wrapping the retrieval layer.
 Module-level graph_store and vector_store are set by graph.py.
 """
+
 from typing import Any
 
 from langchain_core.tools import tool
@@ -89,5 +90,7 @@ def get_mitigations(technique_id: str) -> str:
         return f"No mitigations found for technique: {technique_id}"
     lines = [f"Mitigations for {technique_id}:"]
     for m in mitigations:
-        lines.append(f"  - {m.get('name', 'Unknown')} ({m.get('external_id', 'N/A')}): {m.get('description', '')[:150]}")
+        lines.append(
+            f"  - {m.get('name', 'Unknown')} ({m.get('external_id', 'N/A')}): {m.get('description', '')[:150]}"
+        )
     return "\n".join(lines)

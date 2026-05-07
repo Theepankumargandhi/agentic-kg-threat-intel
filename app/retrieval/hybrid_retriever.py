@@ -2,19 +2,29 @@
 Hybrid retriever combining dense vector search (ChromaDB) and
 graph traversal (Neo4j) via Reciprocal Rank Fusion (RRF).
 """
+
 import logging
 import re
 
-from app.retrieval.vector_store import VectorStore
 from app.retrieval.graph_store import GraphStore
+from app.retrieval.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
 
 _TECHNIQUE_ID_RE = re.compile(r"\bT\d{4}(?:\.\d{3})?\b")
 _TACTIC_KEYWORDS = [
-    "initial access", "execution", "persistence", "privilege escalation",
-    "defense evasion", "credential access", "discovery", "lateral movement",
-    "collection", "command and control", "exfiltration", "impact",
+    "initial access",
+    "execution",
+    "persistence",
+    "privilege escalation",
+    "defense evasion",
+    "credential access",
+    "discovery",
+    "lateral movement",
+    "collection",
+    "command and control",
+    "exfiltration",
+    "impact",
 ]
 
 
@@ -90,15 +100,17 @@ class HybridRetriever:
         for tech_id in _TECHNIQUE_ID_RE.findall(query):
             node = self.graph_store.get_node_by_external_id(tech_id)
             if node and node.get("id") not in seen_ids:
-                results.append({
-                    "id": node["id"],
-                    "name": node.get("name", ""),
-                    "external_id": tech_id,
-                    "description": node.get("properties", {}).get("description", ""),
-                    "node_type": node.get("type", "Technique"),
-                    "source": "graph",
-                    "score": 0.9,
-                })
+                results.append(
+                    {
+                        "id": node["id"],
+                        "name": node.get("name", ""),
+                        "external_id": tech_id,
+                        "description": node.get("properties", {}).get("description", ""),
+                        "node_type": node.get("type", "Technique"),
+                        "source": "graph",
+                        "score": 0.9,
+                    }
+                )
                 seen_ids.add(node["id"])
 
         # Tactic keywords

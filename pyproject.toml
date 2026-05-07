@@ -1,0 +1,35 @@
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "S", "B", "C4", "UP"]
+ignore = [
+    "E501",   # line too long — handled by formatter
+    "S101",   # assert in tests
+    "S104",   # binding to all interfaces — intentional for server config
+    "S105",   # hardcoded-password-string — placeholder defaults in config
+    "S106",   # hardcoded-password-func-arg
+    "S107",   # hardcoded-password-default
+    "S110",   # try-except-pass — intentional for lenient schema parsing
+    "B904",   # raise-without-from-inside-except — intentional in HTTP handlers
+    "UP035",  # deprecated-import (Callable from typing) — clarity over brevity
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S106", "S107"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+ignore_missing_imports = true
+no_strict_optional = true
+warn_return_any = false
+warn_unused_ignores = false
+pretty = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

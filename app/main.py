@@ -2,20 +2,21 @@
 Agentic Knowledge Graph Reasoning Engine — FastAPI entry point.
 Run: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 """
+
 import logging
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
-from typing import Callable
 
 import uvicorn
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import health, ingest, query
 from app.config import settings
 from app.retrieval.graph_store import GraphStore
 from app.retrieval.hybrid_retriever import HybridRetriever
 from app.retrieval.vector_store import VectorStore
-from app.api.routes import health, ingest, query
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,9 +27,9 @@ logger = logging.getLogger(__name__)
 
 
 class AppState:
-    vector_store: VectorStore = None
-    graph_store: GraphStore = None
-    hybrid_retriever: HybridRetriever = None
+    vector_store: VectorStore | None = None
+    graph_store: GraphStore | None = None
+    hybrid_retriever: HybridRetriever | None = None
 
 
 app_state = AppState()
@@ -50,10 +51,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Agentic Knowledge Graph Reasoning Engine",
-    description=(
-        "Cybersecurity Threat Intelligence powered by MITRE ATT&CK, "
-        "LangGraph, Neo4j, and ChromaDB."
-    ),
+    description=("Cybersecurity Threat Intelligence powered by MITRE ATT&CK, LangGraph, Neo4j, and ChromaDB."),
     version="1.0.0",
     lifespan=lifespan,
 )
