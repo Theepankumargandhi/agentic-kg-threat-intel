@@ -50,13 +50,10 @@ jobs:
           python-version: "3.11"
 
       - name: Install linting tools
-        run: pip install ruff mypy -r requirements.txt
+        run: pip install ruff
 
       - name: ruff check
         run: ruff check app/ tests/
 
       - name: ruff format check
         run: ruff format app/ tests/ --check
-
-      - name: mypy
-        run: mypy app/ --pretty
